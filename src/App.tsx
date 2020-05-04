@@ -3,6 +3,8 @@ import './App.css';
 import { Task } from './models/Task';
 import TaskItem from './components/task-item/TaskItem';
 import TaskInput from './components/task-input/TaskInput';
+import { restoreTasks, saveTasks } from './services/local-storage';
+import { getUID } from './services/utils';
 
 interface AppState {
   tasks: Task[]
@@ -10,28 +12,27 @@ interface AppState {
 
 class App extends React.Component<{}, AppState> {
   state = {
-    tasks: [
-      {id: 0, title: "Create something", done: false},
-      {id: 1, title: "Create vasa", done: true},
-      {id: 2, title: "Create baba", done: false}
-    ]
+    tasks: restoreTasks()
+  }
+
+  syncToLocalStorage = (tasks: Task[]) => {
+    saveTasks(tasks);
+    this.setState({ tasks });
   }
 
   addTask = (title: string) => {
     const { tasks } = this.state;
-    const newTasks = [ ...tasks, { title, id: tasks.length, done: false }];
-    this.setState({ tasks: newTasks });
+    this.syncToLocalStorage([ ...tasks, { title, id: getUID(), done: false }]);
   }
 
   completeTask = (id: number) => {
     const { tasks } = this.state;
-    const newTasks = tasks.map(t => t.id === id ? { ...t, done: true } : t);
-    this.setState({ tasks: newTasks });
+    this.syncToLocalStorage(tasks.map(t => t.id === id ? { ...t, done: true } : t));
   }
 
   deleteTask = (id: number) => {
     const { tasks } = this.state;
-    this.setState({ tasks: tasks.filter(t => t.id !== id) });
+    this.syncToLocalStorage(tasks.filter(t => t.id !== id));
   }
 
   render() {
